@@ -241,6 +241,16 @@ function saveData() {
   } catch (e) {}
 }
 
+function renderManualList() {
+  manualListEl.innerHTML = '';
+  manualGoals.forEach(g => {
+    const row = document.createElement('div');
+    row.className = 'manual-log';
+    row.innerHTML = `<span>${g}</span>`;
+    manualListEl.appendChild(row);
+  });
+}
+
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -250,13 +260,7 @@ function loadData() {
     timelineGoals = data.timelineGoals || [];
     if (manualGoals.length > 0) {
       manualTitle.style.display = 'block';
-      manualListEl.innerHTML = '';
-      manualGoals.forEach(t => {
-        const row = document.createElement('div');
-        row.className = 'manual-log';
-        row.innerHTML = `<span>⚽ ${t}</span>`;
-        manualListEl.appendChild(row);
-      });
+      renderManualList();
     }
   } catch (e) {}
 }
@@ -314,15 +318,9 @@ async function checkScore() {
 }
 
 function registerGoal(team, bScore, sScore) {
-  manualGoals.unshift(`${nowLabel()}, but ${team} (${bScore}-${sScore})`);
+  manualGoals.unshift(`⚽ But ${team} (auto), ${nowLabel()}, ${bScore}-${sScore}`);
   manualTitle.style.display = 'block';
-  manualListEl.innerHTML = '';
-  manualGoals.forEach(t => {
-    const row = document.createElement('div');
-    row.className = 'manual-log';
-    row.innerHTML = `<span>⚽ ${t}</span>`;
-    manualListEl.appendChild(row);
-  });
+  renderManualList();
   iconEl.textContent = '🔴';
   iconEl.className = 'quake-icon shake';
   statusText.textContent = 'GOALQUAKE DÉTECTÉ !';
@@ -501,15 +499,9 @@ function nowLabel() {
 }
 
 function markGoal() {
-  manualGoals.unshift(nowLabel());
+  manualGoals.unshift(`⚽ But noté manuellement, ${nowLabel()}`);
   manualTitle.style.display = 'block';
-  manualListEl.innerHTML = '';
-  manualGoals.forEach((t, i) => {
-    const row = document.createElement('div');
-    row.className = 'manual-log';
-    row.innerHTML = `<span>⚽ But noté manuellement</span><span>${t}</span>`;
-    manualListEl.appendChild(row);
-  });
+  renderManualList();
   iconEl.textContent = '⚽';
   iconEl.className = 'quake-icon shake';
   statusText.textContent = 'BUT NOTÉ !';
