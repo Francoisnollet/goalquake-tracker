@@ -149,7 +149,7 @@
     <p>Surveillance sismique du territoire belge<br>Sentir les buts pour ceux qui ne peuvent voir le match</p>
   </header>
 
-  <p style="text-align:center; margin: 0 0 16px;">
+  <p style="text-align:center; margin: 0 0 28px;">
     <button id="sound-btn" class="btn" style="width:auto; padding:8px 16px; font-size:13px;">🔊 Activer le son des buts</button>
   </p>
 
@@ -220,6 +220,7 @@ const timelineElapsed = document.getElementById('timeline-elapsed');
 const timelineLabels = document.getElementById('timeline-labels');
 
 let manualGoals = [];
+let calmTimeout = null;
 let spikeEnergy = 0;
 let lastScore = null;
 let scoreFirstCheck = true;
@@ -274,11 +275,17 @@ async function checkScore() {
     });
 
     if (!match) {
-      scoreStatus.textContent = 'Match non trouvé pour l\'instant (vérifie à nouveau)';
+      scoreStatus.textContent = 'Match non trouvé pour l\'instant (vérifiera à nouveau)';
       return;
     }
 
     const comp = match.competitions[0];
+    const kickoffTime = new Date(match.date || comp.date).getTime();
+    if (kickoffTime && Math.abs(kickoffTime - appStartTime) > 60000) {
+      appStartTime = kickoffTime;
+      localStorage.setItem(START_KEY, String(appStartTime));
+      drawTimeline();
+    }
     const home = comp.competitors.find(c => c.homeAway === 'home');
     const away = comp.competitors.find(c => c.homeAway === 'away');
     const homeIsBelgium = /belgium/i.test(home.team.displayName);
@@ -324,6 +331,17 @@ function registerGoal(team, bScore, sScore) {
   recordTimelineGoal(`${bScore}-${sScore}`);
   playAlertSound();
   saveData();
+  scheduleCalmDown(nowLabel());
+}
+
+function scheduleCalmDown(lastGoalTime) {
+  if (calmTimeout) clearTimeout(calmTimeout);
+  calmTimeout = setTimeout(() => {
+    iconEl.textContent = '🟡';
+    iconEl.className = 'quake-icon';
+    statusText.textContent = 'Calme depuis';
+    statusSub.textContent = `Dernier but à ${lastGoalTime}`;
+  }, 3 * 60 * 1000);
 }
 
 function resizeTimelineCanvas() {
@@ -342,7 +360,11 @@ function drawTimeline() {
   const now = Date.now();
   const elapsedMs = now - appStartTime;
   const elapsedMin = Math.round(elapsedMs / 60000);
-  timelineElapsed.textContent = elapsedMin + ' min écoulées';
+  if (elapsedMin < 0) {
+    timelineElapsed.textContent = 'Coup d\'envoi dans ' + Math.abs(elapsedMin) + ' min';
+  } else {
+    timelineElapsed.textContent = elapsedMin + ' min écoulées';
+  }
 
   timelineCtx.clearRect(0, 0, w, h);
   timelineCtx.strokeStyle = '#c9c7bd';
@@ -496,6 +518,7 @@ function markGoal() {
   recordTimelineGoal('');
   playAlertSound();
   saveData();
+  scheduleCalmDown(nowLabel());
 }
 
 markBtn.addEventListener('click', (e) => { e.preventDefault(); markGoal(); });
