@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Red Devil's goalquake tracker</title>
+<meta name="description" content="Un but des Diables Rouges fait trembler la terre. Cette app le détecte en direct pour ceux qui ne peuvent pas regarder le match.">
+<meta property="og:title" content="Red Devil's goalquake tracker">
+<meta property="og:description" content="Un but des Diables Rouges fait trembler la terre. Cette app le détecte en direct pour ceux qui ne peuvent pas regarder le match.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://TON-PSEUDO.github.io/TON-REPO/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Red Devil's goalquake tracker">
+<meta name="twitter:description" content="Un but des Diables Rouges fait trembler la terre. Cette app le détecte en direct pour ceux qui ne peuvent pas regarder le match.">
+<meta name="twitter:image" content="https://TON-PSEUDO.github.io/TON-REPO/og-image.png">
+<style>
+  :root {
+    --red: #e0332e;
+    --yellow: #f5c518;
+    --black: #1a1a1a;
+    --bg: #fafaf8;
+    --card: #ffffff;
+    --border: #e5e3dd;
+    --text: #1a1a1a;
+    --muted: #6b6a66;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 0 0 60px;
+  }
+  .tricolor { height: 8px; display: flex; }
+  .tricolor span { flex: 1; }
+  .tricolor .b { background: var(--black); }
+  .tricolor .y { background: var(--yellow); }
+  .tricolor .r { background: var(--red); }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 0; }
+  header { text-align: center; margin-bottom: 20px; }
+  header .flags { font-size: 28px; margin-bottom: 6px; }
+  h1 { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+  header p { font-size: 13px; color: var(--muted); margin: 0; }
+  .score-card {
+    background: linear-gradient(135deg, var(--black), #2a2a28);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 16px;
+    border: 1px solid var(--yellow);
+  }
+  .score-label {
+    font-size: 11px;
+    color: var(--yellow);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .score-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.02em;
+  }
+  .score-status {
+    font-size: 12px;
+    color: #bbb;
+    margin-top: 4px;
+  }
+  .seismo-card {
+    background: var(--black);
+    border-radius: 14px;
+    padding: 14px 14px 10px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .seismo-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .seismo-label span { font-size: 11px; color: var(--yellow); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .seismo-label .live-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--red);
+    display: inline-block; margin-right: 5px; animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  canvas#seismo { width: 100%; height: 100px; display: block; }
+  .timeline-card {
+    background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--red);
+    border-radius: 14px; padding: 14px 14px 10px; margin-bottom: 16px;
+  }
+  .timeline-card .seismo-label span { color: var(--red); }
+  .timeline-card .seismo-label span:last-child { color: var(--muted); font-weight: 400; text-transform: none; }
+  canvas#timeline { width: 100%; height: 70px; display: block; }
+  .timeline-labels { position: relative; height: 14px; font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .timeline-labels span { position: absolute; top: 0; }
+  .status-card {
+    background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--yellow);
+    border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 16px;
+  }
+  .quake-icon { font-size: 40px; display: inline-block; transition: transform 0.15s; }
+  .quake-icon.shake { animation: shake 0.5s ease-in-out infinite; }
+  @keyframes shake {
+    0%, 100% { transform: translate(0,0) rotate(0deg); }
+    25% { transform: translate(-3px,2px) rotate(-2deg); }
+    50% { transform: translate(3px,-2px) rotate(2deg); }
+    75% { transform: translate(-2px,-2px) rotate(-1deg); }
+  }
+  .status-text { font-size: 15px; font-weight: 600; margin: 10px 0 4px; }
+  .status-sub { font-size: 12px; color: var(--muted); }
+  .row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .btn {
+    flex: 1; border: 1px solid var(--border); background: var(--card); border-radius: 10px;
+    padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text);
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary { background: var(--red); color: white; border-color: var(--red); }
+  .log-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+    color: var(--muted); margin: 20px 0 8px;
+  }
+  .log-item {
+    background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--red);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .log-item .mag {
+    width: 34px; height: 34px; border-radius: 50%; background: #fdeaea; color: var(--red);
+    font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; margin-right: 10px;
+  }
+  .log-item .info { display: flex; align-items: center; }
+  .log-item .name { font-size: 13px; font-weight: 600; }
+  .log-item .time { font-size: 11px; color: var(--muted); }
+  .empty { text-align: center; font-size: 13px; color: var(--muted); padding: 20px; }
+  .footnote { font-size: 11px; color: var(--muted); text-align: center; margin-top: 24px; line-height: 1.5; }
+  .manual-log {
+    background: var(--card); border: 1px dashed var(--yellow); border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+<div class="tricolor"><span class="b"></span><span class="y"></span><span class="r"></span></div>
+<div class="wrap">
+  <header>
+    <h1>Red Devil's goalquake tracker</h1>
+    <p>Surveillance sismique du territoire belge<br>Sentir les buts pour ceux qui ne peuvent voir le match</p>
+  </header>
+
+  <p style="text-align:center; margin: 0 0 16px;">
+    <button id="sound-btn" class="btn" style="width:auto; padding:8px 16px; font-size:13px;">🔊 Activer le son des buts</button>
+  </p>
+
+  <div class="score-card" id="score-card">
+    <div class="score-label">Score en direct, Diables Rouges 🇧🇪 vs Espagne 🇪🇸</div>
+    <div class="score-value" id="score-value">-- : --</div>
+    <div class="score-status" id="score-status">Recherche du match...</div>
+  </div>
+
+  <div class="seismo-card">
+    <div class="seismo-label">
+      <span><span class="live-dot"></span>Sismographe en direct</span>
+      <span id="seismo-time">--:--:--</span>
+    </div>
+    <canvas id="seismo"></canvas>
+  </div>
+
+  <div class="status-card">
+    <div class="quake-icon" id="quake-icon">🟢</div>
+    <div class="status-text" id="status-text">En attente</div>
+    <div class="status-sub" id="status-sub">Prêt à détecter un but belge</div>
+  </div>
+
+  <div class="timeline-card">
+    <div class="seismo-label">
+      <span>Relevé du match</span>
+      <span id="timeline-elapsed">0 min</span>
+    </div>
+    <canvas id="timeline"></canvas>
+    <div id="timeline-labels" class="timeline-labels"></div>
+  </div>
+
+  <p style="text-align:center; margin: -4px 0 16px; font-size:12px;">
+    Une idée d'application vous trotte dans la tête ? <a href="https://www.linkedin.com/in/francois-nollet" target="_blank" rel="noopener" style="color:var(--muted); text-decoration:underline;">On en parle !</a>
+  </p>
+
+  <div class="log-title" id="manual-title" style="display:none;">Buts (détection auto + notes manuelles)</div>
+  <div id="manual-list"></div>
+
+  <div class="footnote">
+    Score en direct via l'API publique ESPN (non officielle, gratuite, sans clé), interrogée toutes les 15 secondes. Dès qu'un but est détecté, le sismographe et le statut se déclenchent automatiquement : c'est donc une vraie détection en direct, mais basée sur le score du match, pas sur une mesure sismique réelle instantanée.<br>
+    Le tracé du sismographe est une représentation animée (bruit de fond + pic sur détection), pas le signal brut d'un sismomètre. Les goalquakes eux-mêmes sont un phénomène réel et documenté par l'Observatoire royal de Belgique (buts contre le Sénégal, juillet 2026), mais leur analyse sismique se fait après coup, pas en direct. Cette app relie donc un vrai signal en direct (le score) à une mise en scène sismique, pour le fun et pour ne rien louper. Le bouton "marquer un but" manuel reste dispo en secours si l'API de score est indisponible.
+  </div>
+
+  <p style="text-align:center; margin: 20px 0 0;">
+    <a href="#" id="mark-btn" style="font-size:12px; color:var(--muted); text-decoration:underline;">Marquer un but manuellement (si l'auto-détection rate)</a>
+  </p>
+</div>
+
+<script>
+const iconEl = document.getElementById('quake-icon');
+const statusText = document.getElementById('status-text');
+const statusSub = document.getElementById('status-sub');
+const manualListEl = document.getElementById('manual-list');
+const manualTitle = document.getElementById('manual-title');
+const markBtn = document.getElementById('mark-btn');
+const soundBtn = document.getElementById('sound-btn');
+let audioCtx = null;
+let soundEnabled = false;
+const seismoTime = document.getElementById('seismo-time');
+const scoreValue = document.getElementById('score-value');
+const scoreStatus = document.getElementById('score-status');
+const canvas = document.getElementById('seismo');
+const ctx = canvas.getContext('2d');
+const timelineCanvas = document.getElementById('timeline');
+const timelineCtx = timelineCanvas.getContext('2d');
+const timelineElapsed = document.getElementById('timeline-elapsed');
+const timelineLabels = document.getElementById('timeline-labels');
+
+let manualGoals = [];
+let spikeEnergy = 0;
+let lastScore = null;
+let scoreFirstCheck = true;
+const START_KEY = 'goalquake_2026_be_es_start';
+let appStartTime = parseInt(localStorage.getItem(START_KEY), 10);
+if (!appStartTime) {
+  appStartTime = Date.now();
+  localStorage.setItem(START_KEY, String(appStartTime));
+}
+const timelineWindowMs = 130 * 60 * 1000;
+let timelineGoals = [];
+
+const STORAGE_KEY = 'goalquake_2026_be_es';
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ manualGoals, timelineGoals }));
+  } catch (e) {}
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    manualGoals = data.manualGoals || [];
+    timelineGoals = data.timelineGoals || [];
+    if (manualGoals.length > 0) {
+      manualTitle.style.display = 'block';
+      manualListEl.innerHTML = '';
+      manualGoals.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'manual-log';
+        row.innerHTML = `<span>⚽ ${t}</span>`;
+        manualListEl.appendChild(row);
+      });
+    }
+  } catch (e) {}
+}
+loadData();
+
+async function checkScore() {
+  try {
+    const url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+    const res = await fetch(url);
+    const data = await res.json();
+    const events = data.events || [];
+
+    const match = events.find(ev => {
+      const names = (ev.shortName || '') + ' ' + (ev.name || '');
+      return /belgium/i.test(names) && /spain/i.test(names);
+    });
+
+    if (!match) {
+      scoreStatus.textContent = 'Match non trouvé pour l\'instant (vérifiera à nouveau)';
+      return;
+    }
+
+    const comp = match.competitions[0];
+    const home = comp.competitors.find(c => c.homeAway === 'home');
+    const away = comp.competitors.find(c => c.homeAway === 'away');
+    const homeIsBelgium = /belgium/i.test(home.team.displayName);
+
+    const belgium = homeIsBelgium ? home : away;
+    const spain = homeIsBelgium ? away : home;
+    const belgiumScore = parseInt(belgium.score || '0', 10);
+    const spainScore = parseInt(spain.score || '0', 10);
+
+    scoreValue.textContent = `${belgiumScore} : ${spainScore}`;
+    scoreStatus.textContent = match.status.type.detail || match.status.type.description || '';
+
+    if (!scoreFirstCheck && lastScore) {
+      if (belgiumScore > lastScore.belgium) {
+        registerGoal('Belgique', belgiumScore, spainScore);
+      }
+      if (spainScore > lastScore.spain) {
+        scoreStatus.textContent = `But de l'Espagne, ${belgiumScore}-${spainScore} (pas de goalquake pour celui-là)`;
+      }
+    }
+    lastScore = { belgium: belgiumScore, spain: spainScore };
+    scoreFirstCheck = false;
+  } catch (e) {
+    scoreStatus.textContent = 'Score indisponible pour le moment';
+  }
+}
+
+function registerGoal(team, bScore, sScore) {
+  manualGoals.unshift(`${nowLabel()}, but ${team} (${bScore}-${sScore})`);
+  manualTitle.style.display = 'block';
+  manualListEl.innerHTML = '';
+  manualGoals.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'manual-log';
+    row.innerHTML = `<span>⚽ ${t}</span>`;
+    manualListEl.appendChild(row);
+  });
+  iconEl.textContent = '🔴';
+  iconEl.className = 'quake-icon shake';
+  statusText.textContent = 'GOALQUAKE DÉTECTÉ !';
+  statusSub.textContent = `But ${team}, score en direct ${bScore}-${sScore}`;
+  triggerSpike(60);
+  recordTimelineGoal(`${bScore}-${sScore}`);
+  playAlertSound();
+  saveData();
+}
+
+function resizeTimelineCanvas() {
+  timelineCtx.setTransform(1,0,0,1,0,0);
+  timelineCanvas.width = timelineCanvas.clientWidth * 2;
+  timelineCanvas.height = timelineCanvas.clientHeight * 2;
+  timelineCtx.scale(2, 2);
+}
+resizeTimelineCanvas();
+window.addEventListener('resize', resizeTimelineCanvas);
+
+function drawTimeline() {
+  const w = timelineCanvas.clientWidth;
+  const h = timelineCanvas.clientHeight;
+  const mid = h / 2;
+  const now = Date.now();
+  const elapsedMs = now - appStartTime;
+  const elapsedMin = Math.round(elapsedMs / 60000);
+  timelineElapsed.textContent = elapsedMin + ' min écoulées';
+
+  timelineCtx.clearRect(0, 0, w, h);
+  timelineCtx.strokeStyle = '#c9c7bd';
+  timelineCtx.lineWidth = 1;
+  timelineCtx.beginPath();
+  timelineCtx.moveTo(0, mid);
+  timelineCtx.lineTo(w, mid);
+  timelineCtx.stroke();
+
+  timelineCtx.strokeStyle = '#e0332e';
+  timelineCtx.lineWidth = 1.5;
+  timelineGoals.forEach(g => {
+    const x = Math.min(w, Math.max(0, (g.time - appStartTime) / timelineWindowMs * w));
+    timelineCtx.beginPath();
+    for (let i = -14; i <= 14; i++) {
+      const decay = Math.exp(-Math.abs(i) / 4);
+      const y = mid - Math.sin(i * 0.9) * 22 * decay;
+      const px = x + i;
+      if (i === -14) timelineCtx.moveTo(px, y);
+      else timelineCtx.lineTo(px, y);
+    }
+    timelineCtx.stroke();
+  });
+
+  timelineLabels.innerHTML = '';
+  timelineGoals.forEach(g => {
+    const pct = Math.min(100, Math.max(0, (g.time - appStartTime) / timelineWindowMs * 100));
+    const label = document.createElement('span');
+    let anchor = 'translateX(-50%)';
+    if (pct < 8) anchor = 'translateX(0%)';
+    else if (pct > 92) anchor = 'translateX(-100%)';
+    label.style.cssText = `left:${pct}%; transform:${anchor}; color:var(--red); font-weight:600; white-space:nowrap;`;
+    label.textContent = g.score;
+    timelineLabels.appendChild(label);
+  });
+}
+setInterval(drawTimeline, 5000);
+drawTimeline();
+
+function recordTimelineGoal(scoreLabel) {
+  timelineGoals.push({ time: Date.now(), score: scoreLabel });
+  drawTimeline();
+}
+
+function playAlertSound() {
+  if (!soundEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const blastLength = 1.1;
+
+  [220, 221.5, 110].forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.value = freq;
+
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(i === 2 ? 0.15 : 0.22, now + 0.05);
+    gain.gain.setValueAtTime(i === 2 ? 0.15 : 0.22, now + blastLength - 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + blastLength);
+
+    osc.start(now);
+    osc.stop(now + blastLength + 0.05);
+  });
+}
+
+soundBtn.addEventListener('click', () => {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume();
+  soundEnabled = true;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.value = 880;
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.15);
+  soundBtn.textContent = '🔊 Son activé';
+  soundBtn.disabled = true;
+});
+
+function resizeCanvas() {
+  ctx.setTransform(1,0,0,1,0,0);
+  canvas.width = canvas.clientWidth * 2;
+  canvas.height = canvas.clientHeight * 2;
+  ctx.scale(2, 2);
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+let trace = new Array(160).fill(0);
+
+function triggerSpike(strength) {
+  spikeEnergy = Math.max(spikeEnergy, strength);
+}
+
+function drawSeismo() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  const mid = h / 2;
+
+  let val = (Math.random() - 0.5) * 4;
+  if (spikeEnergy > 0) {
+    val += (Math.random() - 0.5) * spikeEnergy;
+    spikeEnergy *= 0.92;
+    if (spikeEnergy < 0.5) spikeEnergy = 0;
+  }
+  trace.push(val);
+  trace.shift();
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = '#f5c518';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const step = w / trace.length;
+  trace.forEach((v, i) => {
+    const x = i * step;
+    const y = mid + v * (mid / 22);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  seismoTime.textContent = new Date().toLocaleTimeString('fr-BE');
+  requestAnimationFrame(drawSeismo);
+}
+requestAnimationFrame(drawSeismo);
+
+function nowLabel() {
+  return new Date().toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function markGoal() {
+  manualGoals.unshift(nowLabel());
+  manualTitle.style.display = 'block';
+  manualListEl.innerHTML = '';
+  manualGoals.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'manual-log';
+    row.innerHTML = `<span>⚽ But noté manuellement</span><span>${t}</span>`;
+    manualListEl.appendChild(row);
+  });
+  iconEl.textContent = '⚽';
+  iconEl.className = 'quake-icon shake';
+  statusText.textContent = 'BUT NOTÉ !';
+  statusSub.textContent = 'Ajouté à ta propre timeline du match';
+  triggerSpike(45);
+  recordTimelineGoal('');
+  playAlertSound();
+  saveData();
+}
+
+markBtn.addEventListener('click', (e) => { e.preventDefault(); markGoal(); });
+
+checkScore();
+setInterval(checkScore, 15000);
+</script>
+</body>
+</html>
