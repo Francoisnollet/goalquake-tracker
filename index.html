@@ -39,8 +39,8 @@
   .tricolor .b { background: var(--black); }
   .tricolor .y { background: var(--yellow); }
   .tricolor .r { background: var(--red); }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 0; }
-  header { text-align: center; margin-bottom: 20px; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 32px 16px 0; }
+  header { text-align: center; margin-bottom: 32px; }
   header .flags { font-size: 28px; margin-bottom: 6px; }
   h1 { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
   header p { font-size: 13px; color: var(--muted); margin: 0; }
@@ -49,7 +49,7 @@
     border-radius: 14px;
     padding: 16px;
     text-align: center;
-    margin-bottom: 16px;
+    margin-bottom: 28px;
     border: 1px solid var(--yellow);
   }
   .score-label {
@@ -75,7 +75,7 @@
     background: var(--black);
     border-radius: 14px;
     padding: 14px 14px 10px;
-    margin-bottom: 16px;
+    margin-bottom: 28px;
     position: relative;
     overflow: hidden;
   }
@@ -89,7 +89,7 @@
   canvas#seismo { width: 100%; height: 100px; display: block; }
   .timeline-card {
     background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--red);
-    border-radius: 14px; padding: 14px 14px 10px; margin-bottom: 16px;
+    border-radius: 14px; padding: 14px 14px 10px; margin-bottom: 28px;
   }
   .timeline-card .seismo-label span { color: var(--red); }
   .timeline-card .seismo-label span:last-child { color: var(--muted); font-weight: 400; text-transform: none; }
@@ -98,7 +98,7 @@
   .timeline-labels span { position: absolute; top: 0; }
   .status-card {
     background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--yellow);
-    border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 16px;
+    border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 28px;
   }
   .quake-icon { font-size: 40px; display: inline-block; transition: transform 0.15s; }
   .quake-icon.shake { animation: shake 0.5s ease-in-out infinite; }
@@ -110,7 +110,7 @@
   }
   .status-text { font-size: 15px; font-weight: 600; margin: 10px 0 4px; }
   .status-sub { font-size: 12px; color: var(--muted); }
-  .row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .row { display: flex; gap: 10px; margin-bottom: 28px; }
   .btn {
     flex: 1; border: 1px solid var(--border); background: var(--card); border-radius: 10px;
     padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text);
@@ -182,7 +182,7 @@
     <div id="timeline-labels" class="timeline-labels"></div>
   </div>
 
-  <p style="text-align:center; margin: -4px 0 16px; font-size:12px;">
+  <p style="text-align:center; margin: 4px 0 24px; font-size:12px;">
     Une idée d'application vous trotte dans la tête ? <a href="https://www.linkedin.com/in/francois-nollet" target="_blank" rel="noopener" style="color:var(--muted); text-decoration:underline;">On en parle !</a>
   </p>
 
